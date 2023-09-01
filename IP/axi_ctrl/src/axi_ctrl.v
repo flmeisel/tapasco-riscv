@@ -171,12 +171,12 @@ if (AXI_PROTOCOL == "AXI4LITE") begin
 end else begin // AXI4 FULL
 
     reg[8:0] arlen_reg;
-    reg [ADDRESS_WIDTH-1:0] araddr_reg, awaddr_reg;
+    reg [ADDRESS_WIDTH-1:0] araddr_reg, araddr_next_reg, awaddr_reg;
     reg [ID_WIDTH-1:0] rid, wid;
     
     assign bram_clk = CLK;
     assign bram_rst = !RST_N;
-    assign S_AXI_arready = 1;
+    assign S_AXI_arready = (arlen_reg == 0);
     assign S_AXI_rvalid = (arlen_reg > 0);
     assign S_AXI_rdata = bram_dout;
     assign S_AXI_rlast = (arlen_reg == 1);
@@ -188,27 +188,28 @@ end else begin // AXI4 FULL
             araddr_reg <= 0;
             rid <= 0;
         end else begin
-            rid <= S_AXI_arvalid ? S_AXI_arid : rid;
-            arlen_reg <= S_AXI_arvalid ? (S_AXI_arlen + 1) : 
-                            ((arlen_reg > 0) ? arlen_reg - 1 : 0);
-            araddr_reg <= S_AXI_arvalid ? (S_AXI_araddr + BYTES_PER_WORD) : (araddr_reg + BYTES_PER_WORD);
+            if (S_AXI_arvalid && S_AXI_arready) begin
+                rid <= S_AXI_arid;
+                arlen_reg <= S_AXI_arlen + 1;
+                araddr_reg <= S_AXI_araddr;
+                araddr_next_reg <= S_AXI_araddr + BYTES_PER_WORD;
+            end
+            else if (S_AXI_rready) begin
+                arlen_reg <= (arlen_reg > 0) ? arlen_reg - 1 : 0;
+                araddr_reg <= araddr_next_reg;
+                araddr_next_reg <= araddr_next_reg + BYTES_PER_WORD;
+            end
         end
     end
 
     always @(posedge CLK) begin
         if (!RST_N) begin
             status[0] <= 0;
-        end else begin
-            if (S_AXI_rvalid && !S_AXI_rready) begin
-                status[0] <= 1;
-                $display("AXI master should accept data within one cycle.");
-                $finish;
-            end
         end
     end
 
     if(READ_ONLY == 1) begin
-        assign bram_addr = S_AXI_arvalid ? S_AXI_araddr : araddr_reg;
+        assign bram_addr = (S_AXI_arvalid && S_AXI_arready) ? S_AXI_araddr : (S_AXI_rready ? araddr_next_reg : araddr_reg);
         assign bram_en = S_AXI_arvalid | (arlen_reg > 1);
         assign bram_we = 0;
         assign bram_din = 0;
@@ -222,8 +223,9 @@ end else begin // AXI4 FULL
         reg [1:0] wen_reg;
         reg [BYTES_PER_WORD*8-1:0] wdata_reg;
         assign bram_addr = (S_AXI_wvalid) ? (S_AXI_awvalid ? S_AXI_awaddr : awaddr_reg) : 
-                                (S_AXI_arvalid ? S_AXI_araddr : araddr_reg);
-        assign bram_en = S_AXI_arvalid | S_AXI_wvalid;
+                                ((S_AXI_arvalid && S_AXI_arready) ? S_AXI_araddr : (S_AXI_rready ? araddr_next_reg : araddr_reg));
+        //NOTE: 'arlen_reg != 0' is not precise, but only causes one additional read cycle. Precise: 'arlen_reg > (S_AXI_rready ? 1 : 0)'
+        assign bram_en = S_AXI_arvalid | (arlen_reg != 0) | S_AXI_wvalid;
         assign bram_din = S_AXI_wvalid ? S_AXI_wdata : wdata_reg;
         assign bram_we = ((S_AXI_awvalid && S_AXI_wvalid) || (wen_reg[0] && S_AXI_wvalid) || (wen_reg[1] && S_AXI_awvalid)) ? S_AXI_wstrb : 0;
         assign S_AXI_awready = 1;
@@ -250,7 +252,7 @@ end else begin // AXI4 FULL
                     wen_reg[1] <= 0;
                 end
                 if (S_AXI_awvalid && !S_AXI_wvalid) begin
-                    // addr before address
+                    // addr before data
                     wen_reg[0] <= 1;
                 end else if (wen_reg[0] && S_AXI_wvalid) begin
                     wen_reg[0] <= 0;
