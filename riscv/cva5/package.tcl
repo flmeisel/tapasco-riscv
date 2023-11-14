@@ -10,6 +10,7 @@ add_files [glob cva5/l2_arbiter/*.sv]
 add_files [glob cva5/local_memory/local_memory_interface.sv]
 add_files [glob cva5/core/lutrams/*.sv]
 add_files [glob cva5/core/*{.sv,.v}]
+add_files [glob cva5/core/xilinx/xilinx_byte_enable_ram.sv]
 
 remove_files cva5/core/binary_occupancy.sv
 remove_files cva5/core/placer_randomizer.sv

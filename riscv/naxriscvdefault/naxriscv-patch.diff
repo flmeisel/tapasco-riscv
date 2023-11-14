@@ -1,0 +1,90 @@
+diff --git a/src/main/scala/naxriscv/Gen.scala b/src/main/scala/naxriscv/Gen.scala
+index 1c52434..233a790 100644
+--- a/src/main/scala/naxriscv/Gen.scala
++++ b/src/main/scala/naxriscv/Gen.scala
+@@ -40,6 +40,9 @@ object Config{
+               fetchRange : UInt => Bool = _(31 downto 28) =/= 0x1,
+               aluCount : Int = 2,
+               decodeCount : Int = 2,
++              di_cache_size : Int = 4096*4,
++              di_cache_ways : Int = 4,
++              btb_entries : Int = 512,
+               withRvc : Boolean = false,
+               withMmu : Boolean = true,
+               withPerfCounters : Boolean = true,
+@@ -95,8 +98,8 @@ object Config{
+     plugins += new FetchPlugin()
+     plugins += new PcPlugin(resetVector)
+     plugins += new FetchCachePlugin(
+-      cacheSize = 4096*4,
+-      wayCount = 4,
++      cacheSize = di_cache_size,//4096*4,
++      wayCount = di_cache_ways,//4,
+       injectionAt = 2,
+       fetchDataWidth = 64,
+       memDataWidth = 64,
+@@ -161,7 +164,7 @@ object Config{
+     )
+     plugins += new BtbPlugin(
+       //      entries = 8192*8,
+-      entries = 512,
++      entries = btb_entries,//512,
+       readAt = 0,
+       hitAt = 1,
+       jumpAt = 1
+@@ -267,8 +270,8 @@ object Config{
+ 
+     plugins += new DataCachePlugin(
+       memDataWidth = 64,
+-      cacheSize    = 4096*4,
+-      wayCount     = 4,
++      cacheSize    = di_cache_size,//4096*4,
++      wayCount     = di_cache_ways,//4,
+       refillCount = 2,
+       writebackCount = 2,
+       tagsReadAsync = withDistributedRam,
+diff --git a/src/main/scala/naxriscv/platform/Litex.scala b/src/main/scala/naxriscv/platform/Litex.scala
+index daf4dc7..9133868 100644
+--- a/src/main/scala/naxriscv/platform/Litex.scala
++++ b/src/main/scala/naxriscv/platform/Litex.scala
+@@ -20,10 +20,10 @@ import scala.collection.mutable
+ import scala.collection.mutable.ArrayBuffer
+ 
+ 
+-class NaxRiscvLitex(plugins : ArrayBuffer[Plugin], xlen : Int, toPeripheral : UInt => Bool) extends Component{
++class NaxRiscvLitex(plugins : ArrayBuffer[Plugin], xlen : Int, ramDataWidth : Int, ioDataWidth : Int, toPeripheral : UInt => Bool) extends Component{
+ 
+-  val ramDataWidth = 64
+-  val ioDataWidth  = 32
++//  val ramDataWidth = 64
++//  val ioDataWidth  = 32
+   plugins += new FetchAxi4(
+     ramDataWidth = ramDataWidth,
+     ioDataWidth  = ioDataWidth,
+@@ -114,6 +114,8 @@ object LitexGen extends App{
+   var netlistName = "NaxRiscvLitex"
+   var resetVector = 0l
+   var xlen = 32
++  var ramDataWidth = 64
++  var ioDataWidth = 32
+   var jtagTap = false
+   var jtagInstruction = false
+   var debug = false
+@@ -131,6 +133,8 @@ object LitexGen extends App{
+       for(e <- elements) scalaArgs += s"""args("${e(0)}") = ${e(1)}"""
+     }
+     opt[Long]("reset-vector") action  { (v, c) => resetVector = v }
++    opt[Int]("ram-data-width") action  { (v, c) => ramDataWidth = v }
++    opt[Int]("io-data-width") action  { (v, c) => ioDataWidth = v }
+     opt[Int]("xlen") action  { (v, c) => xlen = v }
+     opt[Unit]("with-jtag-tap") action  { (v, c) => jtagTap = true }
+     opt[Unit]("with-jtag-instruction") action  { (v, c) => jtagInstruction = true }
+@@ -177,7 +181,7 @@ object LitexGen extends App{
+     val plugins = ScalaInterpreter.evaluate[ArrayBuffer[Plugin]](code, List(
+       ("memoryRegions", "Seq[naxriscv.platform.LitexMemoryRegion]", memoryRegions)
+     ))
+-    new NaxRiscvLitex(plugins, xlen, address => memoryRegions.filter(_.onPeripheral).map(_.mapping.hit(address)).orR).setDefinitionName(netlistName)
++    new NaxRiscvLitex(plugins, xlen, ramDataWidth, ioDataWidth, address => memoryRegions.filter(_.onPeripheral).map(_.mapping.hit(address)).orR).setDefinitionName(netlistName)
+   }
+ }
+ 

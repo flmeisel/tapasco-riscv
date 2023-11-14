@@ -1,0 +1,44 @@
+diff --git a/pythondata_cpu_naxriscv/verilog/configs/fetch.scala b/pythondata_cpu_naxriscv/verilog/configs/fetch.scala
+index 0156eda..3a4cb37 100644
+--- a/pythondata_cpu_naxriscv/verilog/configs/fetch.scala
++++ b/pythondata_cpu_naxriscv/verilog/configs/fetch.scala
+@@ -2,8 +2,8 @@
+ plugins += new FetchPlugin()
+ plugins += new PcPlugin(resetVector)
+ plugins += new FetchCachePlugin(
+-  cacheSize = 4096*4,
+-  wayCount = 4,
++  cacheSize = di_cache_size,//4096*4,
++  wayCount = di_cache_ways,//4,
+   injectionAt = 2,
+   fetchDataWidth = 64,
+   memDataWidth = 64,
+diff --git a/pythondata_cpu_naxriscv/verilog/configs/gen.scala b/pythondata_cpu_naxriscv/verilog/configs/gen.scala
+index 9962ad2..7ee54bf 100644
+--- a/pythondata_cpu_naxriscv/verilog/configs/gen.scala
++++ b/pythondata_cpu_naxriscv/verilog/configs/gen.scala
+@@ -24,6 +24,9 @@ plugins ++= Config.plugins(
+   resetVector = resetVector,
+   aluCount    = arg("alu-count", 2),
+   decodeCount = arg("decode-count", 2),
++  di_cache_size = arg("di-cache-size", 4096*4),
++  di_cache_ways = arg("di-cache-ways", 4),
++  btb_entries = arg("btb-entries", 512),
+   debugTriggers = 0,
+   withRvc = arg("rvc", false),
+   withLoadStore = true,
+diff --git a/pythondata_cpu_naxriscv/verilog/configs/lsu.scala b/pythondata_cpu_naxriscv/verilog/configs/lsu.scala
+index be10c83..7dcc050 100644
+--- a/pythondata_cpu_naxriscv/verilog/configs/lsu.scala
++++ b/pythondata_cpu_naxriscv/verilog/configs/lsu.scala
+@@ -35,8 +35,8 @@ plugins += new LsuPlugin(
+ )
+ plugins += new DataCachePlugin(
+   memDataWidth = 64,
+-  cacheSize    = 4096*4,
+-  wayCount     = 4,
++  cacheSize    = di_cache_size,//4096*4,
++  wayCount     = di_cache_ways,//4
+   refillCount = 2,
+   writebackCount = 2,
+   tagsReadAsync = true,

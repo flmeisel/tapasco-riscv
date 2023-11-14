@@ -1,5 +1,7 @@
 set cpu_vlnv [list \
   "vexriscv_pe"                 {user.org:user:VexRiscvAxi4:1.0} \
+  "naxriscvsmall_pe"            {user.org:user:NaxTapascoRiscvSmall:1.0} \
+  "naxriscvdefault_pe"          {user.org:user:NaxTapascoRiscvDefault:1.0} \
   "orca_pe"                     {vectorblox.com:user:orca:1.0} \
   "orca_mxp_pe"                 {vectorblox.com:user:orca:1.0} \
   "piccolo32_pe"                {bluespec.com:piccolo:RV32ACIMU} \

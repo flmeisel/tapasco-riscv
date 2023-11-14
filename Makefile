@@ -31,7 +31,7 @@ list:
 	tapasco -v import IP/$@/esa.informatik.tu-darmstadt.de_tapasco_$@_1.0.zip as $$PE_ID --skipEvaluation
 
 %_setup: riscv/%/setup.sh
-	$<
+	BRAM_SIZE=$(BRAM_SIZE) $<
 
 uninstall:
 	rm -rf $(TAPASCO_WORK_DIR)/core/{${PE_LIST_SEPERATED}}*
@@ -49,3 +49,5 @@ clean: uninstall
 	rm -rf riscv/cva5/{cva5,openhwgroup_risc-v_cva5.zip}
 	rm -rf riscv/vexriscv/{SpinalHDL,VexRiscv}
 	rm -rf riscv/cva6/cva6
+	rm -rf riscv/naxriscvsmall/{SpinalHDL,NaxRiscv,pythondata-cpu-naxriscv}
+	rm -rf riscv/naxriscvdefault/{SpinalHDL,NaxRiscv,pythondata-cpu-naxriscv}
