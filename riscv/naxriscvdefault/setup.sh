@@ -24,7 +24,7 @@ popd
 
 
 cd NaxRiscv
-sbt "runMain naxriscv.platform.LitexGen --memory-region=$((0x11000000)),$((0x10000)),io,p --memory-region=$((0x00000000)),$(($BRAM_SIZE)),xc,m --memory-region=$(($BRAM_SIZE)),$(($BRAM_SIZE)),rwc,m --reset-vector=0 --xlen=32 --scala-file=../pythondata-cpu-naxriscv/pythondata_cpu_naxriscv/verilog/configs/gen.scala --netlist-name=NaxTapascoRiscvDefault"
+sbt "runMain naxriscv.platform.LitexGen --memory-region=$((0x11000000)),$((0x10000)),io,p --memory-region=$((0x00000000)),$(($BRAM_SIZE)),xc,m --memory-region=$(($BRAM_SIZE)),$(($BRAM_SIZE)),rwc,m --reset-vector=0 --xlen=32 --ram-data-width=64 --io-data-width=32 --scala-file=../pythondata-cpu-naxriscv/pythondata_cpu_naxriscv/verilog/configs/gen.scala --netlist-name=NaxTapascoRiscvDefault"
 cd ..
 
 mkdir -p ../../IP/riscv/NaxRiscvDefault

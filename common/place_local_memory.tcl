@@ -53,16 +53,29 @@
 
   # Create instance: rst_CLK_100M, and set properties
   set rst_CLK_100M [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_CLK_100M ]
-
-  # Create instance: rv_dmem_ctrl, and set properties
-  set rv_dmem_ctrl [ create_bd_cell -type ip -vlnv esa.cs.tu-darmstadt.de:axi:axi_ctrl rv_dmem_ctrl ]
+ 
+ #TODO: Investigate issues with NaxRiscv and esa.cs.tu-darmstadt.de:axi:axi_ctrl. For now, use the Xilinx IP instead.
+ # Create instance: rv_dmem_ctrl, and set properties
+  set rv_dmem_ctrl [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl rv_dmem_ctrl ]
   set_property -dict [ list \
-   CONFIG.MEM_SIZE [expr $lmem] \
+   CONFIG.SINGLE_PORT_BRAM {1} \
  ] $rv_dmem_ctrl
 
   # Create instance: rv_imem_ctrl, and set properties
-  set rv_imem_ctrl [ create_bd_cell -type ip -vlnv esa.cs.tu-darmstadt.de:axi:axi_ctrl rv_imem_ctrl ]
+  set rv_imem_ctrl [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl rv_imem_ctrl ]
   set_property -dict [ list \
-   CONFIG.MEM_SIZE [expr $lmem] \
-   CONFIG.READ_ONLY {1} \
+   CONFIG.SINGLE_PORT_BRAM {1} \
  ] $rv_imem_ctrl
+
+#  # Create instance: rv_dmem_ctrl, and set properties
+#  set rv_dmem_ctrl [ create_bd_cell -type ip -vlnv esa.cs.tu-darmstadt.de:axi:axi_ctrl rv_dmem_ctrl ]
+#  set_property -dict [ list \
+#   CONFIG.MEM_SIZE [expr $lmem] \
+# ] $rv_dmem_ctrl
+#
+#  # Create instance: rv_imem_ctrl, and set properties
+#  set rv_imem_ctrl [ create_bd_cell -type ip -vlnv esa.cs.tu-darmstadt.de:axi:axi_ctrl rv_imem_ctrl ]
+#  set_property -dict [ list \
+#   CONFIG.MEM_SIZE [expr $lmem] \
+#   CONFIG.READ_ONLY {1} \
+# ] $rv_imem_ctrl
